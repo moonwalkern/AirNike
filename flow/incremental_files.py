@@ -1,6 +1,10 @@
 import os
 import sys
+from subprocess import call
 
+
+def split_call(str):
+    call(str.split(' '))
 
 def diffFiles(first_path, second_path):
     try:
@@ -29,3 +33,5 @@ def diffFiles(first_path, second_path):
 #           "/Users/gopalsr/Documents/Sreeji/code/AirNike/second_folder")
 
 diffFiles(sys.argv[1], sys.argv[2])
+
+print basesplit_call("hdfs dfs -ls -C {0}".format(sys.argv[3]))
