@@ -1,13 +1,13 @@
-from airflow import DAG
+import os
+import urllib
 from datetime import datetime, timedelta
+from subprocess import call
+
+from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
-from subprocess import call
-import urllib
-import os
-import subprocess
-import sys
+
 
 def split_call(str):
     call(str.split(' '))
@@ -42,10 +42,6 @@ default_args = {
 }
 
 
-
-
-
-
 def spark_submit(exec_path, params):
     params = params.copy()
     # params['log.schema'] = ','.join(params['log.schema'])
@@ -75,7 +71,7 @@ copy_hdfs = BashOperator(
 )
 
 file_check = PythonOperator(
-    task_id='file_check',
+    task_id='file_check1',
     python_callable=check_file, dag=dag
 )
 
