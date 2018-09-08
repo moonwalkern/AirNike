@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from subprocess import call
 
 from airflow import DAG
+from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
@@ -69,6 +70,8 @@ copy_hdfs = BashOperator(
     retries=3,
     dag=dag
 )
+
+spark = SparkSubmitOperator
 
 file_check = PythonOperator(
     task_id='file_check1',
