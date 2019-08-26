@@ -1,0 +1,161 @@
+{
+  "spec": {
+    "dataSchema": {
+      "dataSource": "proxy",
+      "granularitySpec": {
+        "intervals": ["2016-01-01/2016-12-31"],
+        "queryGranularity": "DAY",
+        "segmentGranularity": "day",
+        "type": "uniform"
+      },
+      "metricsSpec": [
+        {
+          "name": "count",
+          "type": "count"
+        },
+        {
+          "fieldName": "sc_bytes",
+          "name": "sc_bytes",
+          "type": "longSum"
+        },
+        {
+          "fieldName": "cs_bytes",
+          "name": "cs_bytes",
+          "type": "longSum"
+        }
+      ],
+      "parser": {
+        "parseSpec": {
+          "columns": [
+            "cs_username",
+            "vid",
+            "time_taken",
+            "c_ip",
+            "x_cs_auth_domain",
+            "x_auth_credential_type",
+            "s_supplier_name",
+            "s_supplier_ip",
+            "s_supplier_country",
+            "s_supplier_failures",
+            "x_exception_id",
+            "sc_filter_result",
+            "cs_referer",
+            "sc_status",
+            "s_action",
+            "cs_method",
+            "rs_content_type",
+            "cs_uri_scheme",
+            "cs_host",
+            "cs_uri_port",
+            "cs_uri_path",
+            "cs_uri_query",
+            "cs_uri_extension",
+            "cs_user_agent",
+            "s_ip",
+            "sc_bytes",
+            "cs_bytes",
+            "x_virus_id",
+            "x_bluecoat_application_name",
+            "x_bluecoat_application_operation",
+            "cs_threat_risk",
+            "x_bluecoat_transaction_uuid",
+            "x_icap_reqmod_header",
+            "x_icap_respmod_header",
+            "r_ip",
+            "file_path",
+            "insert_datetime",
+            "source",
+            "cs_categories",
+            "cs_auth_group",
+            "event_datetime",
+            "site",
+            "datetime",
+            "vzeid",
+            "uuid",
+            "c0",
+            "c1",
+            "c2",
+            "c3",
+            "c4",
+            "c5",
+            "c6",
+            "c7",
+            "c8",
+            "c9",
+            "c10",
+            "c11",
+            "c12",
+            "c13",
+            "c14",
+            "c15",
+            "c16",
+            "m1",
+            "m2",
+            "m3",
+            "m4",
+            "m5",
+            "m6"
+          ],
+          "dimensionsSpec": {
+            "dimensions": [
+              "cs_username",
+              "vid",
+              "time_taken",
+              "c_ip",
+              "x_cs_auth_domain",
+              "x_auth_credential_type",
+              "s_supplier_name",
+              "s_supplier_ip",
+              "s_supplier_country",
+              "s_supplier_failures",
+              "x_exception_id",
+              "sc_filter_result",
+              "cs_referer",
+              "sc_status",
+              "s_action",
+              "rs_content_type",
+              "cs_uri_scheme",
+              "cs_host",
+              "cs_uri_port",
+              "cs_uri_path",
+              "cs_uri_query",
+              "cs_uri_extension",
+              "cs_user_agent",
+              "s_ip",
+              "x_virus_id",
+              "x_bluecoat_application_name",
+              "x_bluecoat_application_operation",
+              "cs_threat_risk",
+              "x_bluecoat_transaction_uuid",
+              "x_icap_reqmod_header",
+              "x_icap_respmod_header",
+              "r_ip",
+              "site"
+            ]
+          },
+          "format": "tsv",
+          "timestampSpec": {
+            "column": "datetime"
+          }
+        },
+        "type": "hadoopyString"
+      }
+    },
+    "ioConfig": {
+      "inputSpec": {
+        "paths": "/data/apache/access/enriched/date=01-01-2016/*",
+        "type": "static"
+      },
+      "type": "hadoop"
+    },
+    "tuningConfig": {
+      "jobProperties": {},
+      "partitionsSpec": {
+        "targetPartitionSize": 5000000,
+        "type": "hashed"
+      },
+      "type": "hadoop"
+    }
+  },
+  "type": "index_hadoop"
+}

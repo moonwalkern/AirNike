@@ -4,7 +4,6 @@ import subprocess
 import sys
 from subprocess import call
 
-
 def split_call(str):
     call(str.split(' '))
 

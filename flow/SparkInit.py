@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
-from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
+# from airflow.contrib.operators.phoenix_batch_operator import PhonixBatchOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
@@ -219,8 +219,8 @@ config = {
 }
 
 CONFIG = CONFIGS[SITE]
-# SCHEMA = CONFIG['schema']
 SCHEMA = ",".join(CONFIG['schema'])
+# SCHEMA = CONFIG['schema']
 
 PARAMS = dict({
                   'log.source.name': 'proxy',
@@ -245,33 +245,40 @@ PARAMS = dict({
                   'log.partition.by.date': 'true'
               }.items() + [v.split("=") for v in OTHER_PARAM_OVERRIDES.split(",")])
 
-spark_submit_task = SparkSubmitOperator(
-    task_id='spark_submit_job',
-    conn_id='spark_default',
-    java_class='com.verizon.gsoc.datasources.phoenix.Phoenix',
-    application=EXECUTABLE_PATH,
-    # application_args=[' '.join(['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()])],
-    application_args=['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()],
-    total_executor_cores='1',
-    executor_cores='1',
-    executor_memory='2g',
-    num_executors='2',
-    name='spark-airflow-phoenix',
-    verbose=True,
-    driver_memory='1g',
-    xcom_push='true',
-    conf=config,
-    dag=dag,
-)
+
+# spark_submit_task = SparkSubmitOperator(
+#     task_id='spark_submit_job',
+#     conn_id='spark_default',
+#     java_class='com.verizon.gsoc.datasources.phoenix.Phoenix',
+#     application=EXECUTABLE_PATH,
+#     # application_args=[' '.join(['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()])],
+#     application_args=['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()],
+#     total_executor_cores='1',
+#     executor_cores='1',
+#     executor_memory='2g',
+#     num_executors='2',
+#     name='spark-airflow-phoenix',
+#     verbose=True,
+#     driver_memory='1g',
+#     xcom_push='true',
+#     conf=config,
+#     dag=dag,
+# )
+
 
 def print_hello():
     return 'Finally it worked!!!!' + str(datetime.now().strftime("%m%d%Y-%H%M"))
 
+
 def print_check():
     return 'Finally it worked!!!!' + str(datetime.now().strftime("%m%d%Y-%H%M"))
 
+
+# phoenix_batch_task = PhonixBatchOperator(phoenix_batch_operator_param='This is phoenix operator',
+#                                          task_id='phoenix_batch_task', dag=dag)
+
 dummy_operator = DummyOperator(task_id='dummy_task', retries=3, dag=dag)
 
-spark_success = PythonOperator(task_id='spark_success_task',python_callable=print_hello, dag=dag)
+spark_success = PythonOperator(task_id='spark_success_task', python_callable=print_hello, dag=dag)
 
-dummy_operator >> spark_submit_task >> spark_success
+dummy_operator >> spark_success

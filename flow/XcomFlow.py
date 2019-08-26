@@ -5,27 +5,24 @@ from airflow.contrib.operators.spark_submit_operator import SparkSubmitOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
-default_args = {
-    'owner': 'sreeji',
+args = {
+    'owner': 'gsoc',
     'start_date': datetime(2018, 8, 26),
     'retries': 5,
     'retry_delay': timedelta(minutes=1),
+    'provide_context': True
 }
 
-dag = DAG('SparkInit', description='StarterInit',
+dag = DAG('XcomFlow', description='Xcom Flow',
           schedule_interval='* * * * *',
-          start_date=datetime(2017, 3, 20), catchup=False)
+          start_date=datetime(2017, 3, 20),
+          default_args=args,
+          catchup=False)
 
 PATH = '/user/hdfs/userlist/'
-EXECUTABLE_PATH = '/home/hdfs/new_platform/lib/spark-druid-etl-0.1.0-jar-with-dependencies.jar'  # sys.argv[3]
+EXECUTABLE_PATH = '/Users/sreeji/Documents/Sreeji/workcode/SparkSoftBugETL/target/spark-softbug-etl-1.0-SNAPSHOT-jar-with-dependencies.jar'  # sys.argv[3]
 OTHER_PARAM_OVERRIDES = 'offset=1'  # sys.argv[4]
 SITE = 'twnoh'
-# PATH = 'file:////Users/gopalsr/Documents/Sreeji/code/etl_data_testing/data-new/user_list/'
-# EXECUTABLE_PATH = '/Users/gopalsr/Documents/Sreeji/code/spark-druid-etl/target/spark-druid-etl-0.1.0-jar-with-dependencies.jar'  # sys.argv[3]
-
-config = {
-    'queue': 'default',
-}
 
 BASIC_B = [
     "date",
@@ -219,10 +216,11 @@ config = {
 }
 
 CONFIG = CONFIGS[SITE]
-# SCHEMA = CONFIG['schema']
 SCHEMA = ",".join(CONFIG['schema'])
+# SCHEMA = CONFIG['schema']
 
 PARAMS = dict({
+                  'log.date': '20190101',
                   'log.source.name': 'proxy',
                   'log.path': PATH,
                   'log.schema': SCHEMA,
@@ -245,13 +243,35 @@ PARAMS = dict({
                   'log.partition.by.date': 'true'
               }.items() + [v.split("=") for v in OTHER_PARAM_OVERRIDES.split(",")])
 
+
+def push_xcom(**kwargs):
+    print 'push to xcom'
+    ti = kwargs['ti']
+    ti.xcom_push(key='push_xcom', value=['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()])
+    print kwargs
+    print type(PARAMS)
+    print PARAMS
+    return [PARAMS]
+
+
+def pull_xcom(**kwargs):
+    print 'pull from xcom'
+    print kwargs
+    ti = kwargs['ti']
+    value = ti.xcom_pull(task_ids='push_xcom')
+    print value
+    print type(value)
+
+
 spark_submit_task = SparkSubmitOperator(
     task_id='spark_submit_job',
     conn_id='spark_default',
-    java_class='com.verizon.gsoc.datasources.phoenix.Phoenix',
+    java_class='com.scaledata.softbug.datasources.apache.AccessParser',
     application=EXECUTABLE_PATH,
     # application_args=[' '.join(['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()])],
-    application_args=['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()],
+    # application_args=['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()],
+    # application_args=['{0}={1}'.format(k, v) for (k, v) in PARAMS.iteritems()],
+    application_args=["{{ti.xcom_pull(task_ids='push_xcom')}}"],
     total_executor_cores='1',
     executor_cores='1',
     executor_memory='2g',
@@ -264,14 +284,11 @@ spark_submit_task = SparkSubmitOperator(
     dag=dag,
 )
 
-def print_hello():
-    return 'Finally it worked!!!!' + str(datetime.now().strftime("%m%d%Y-%H%M"))
-
-def print_check():
-    return 'Finally it worked!!!!' + str(datetime.now().strftime("%m%d%Y-%H%M"))
-
 dummy_operator = DummyOperator(task_id='dummy_task', retries=3, dag=dag)
+push_xcom_task = PythonOperator(task_id='push_xcom', python_callable=push_xcom,
+                                dag=dag)
+pull_xcom_task = PythonOperator(task_id='pull_xcom', python_callable=pull_xcom,
+                                templates_dict={'_application_args': PARAMS},
+                                dag=dag)
 
-spark_success = PythonOperator(task_id='spark_success_task',python_callable=print_hello, dag=dag)
-
-dummy_operator >> spark_submit_task >> spark_success
+dummy_operator >> push_xcom_task >> pull_xcom_task >> spark_submit_task
